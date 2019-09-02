@@ -1,0 +1,8 @@
+The original python package "sht-sensor" includes RH coefficients for v4 of the SHT15 sensor, whereas the sensors I use are v4. I modified this by going into the sht-sensor package using the following:
+
+
+1) sudo nano /usr/local/lib/python2.7/dist-packages/sht_sensor/sensor.py
+
+2) replace coefficients as appropriate
+
+3) save

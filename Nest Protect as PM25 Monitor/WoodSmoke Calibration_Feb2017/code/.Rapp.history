@@ -1,0 +1,654 @@
+nary",   "H16_4binary",  "H16_5binary",   "H16_6binary",   "H16_7binary",   "H16_8binary",   "H16_9binary",   "H16_10binary", "H16_11binary",  "hh_paidlabor",  "H17_1binary",   "H17_2binary",   "H17_3binary",   "H17_4binary",  "H17_5binary",   "H17_6binary",   "H17_7binary",   "H17_8binary",   "H17_9binary",   "H17_10binary", "H17_11binary",  "respondent_paidlabor", "spending"#
+    )]#
+colnames(base_formerge) <- paste("base", colnames(base_formerge), sep = "_")#
+base_formerge <- rename(base_formerge,c("base_HHID"="HHID"))#
+# Personal Identifying Info#
+pik <- rename(pik, c("I2" = "HHID"))#
+pik_formerge <- pik[, c('HHID','I6_1' ,'I6_2', 'I6_3', 'I6_4', 'I6_5')]#
+    # make variable for full family size#
+    pik_formerge[, hh_size := (I6_1 + I6_2 + I6_3 + I6_4 + I6_5)]#
+##### Truncate to variables of interest#
+## Merge post-monitorng questionnaire with baseline#
+dt_p_0 <- merge(pmp, base_formerge, by='HHID')#
+    # exclude variables that shoudl not be counted (e.g. character descriptions of 97)#
+    dt_p_0[, c('B4_1', 'B5_2', # location of ventilation picture files#
+        'C1X', 'C2X','C3X', #blank columns for description of other primary, secondary, tertiary fuels#
+        'C4X', 'C5X', #other stovetype descriptions, blank#
+        'C6_97X', 'C6_97U',# other fuel use description, blank#
+        'D2X', 'D4X', #description of other heating type, D2X blank, D4X has one value that is not useful#
+        'E2_97X', #other lighting source, blank#
+        'F6aX', #description of difference in day 1 vs. day 2, blank#
+        'F9_97X', 'F10_97X', #description of other smoking activities, blank#
+        'base_A2_97', 'base_A4_97', 'base_A5_97', 'base_A6_97', 'base_A7_97', 'base_A9X', 'base_A12_2_97', #other descriptions#
+        'base_H4X', 'base_H6X', 'base_H16_97','base_H17X', # 'other' descriptions #
+         'Interviewer' ) # interviewer -- a non-transportable variable#
+            := NULL]#
+### examine missingness of surveys#
+# variables for imputation:#
+    # find all missing values, and count NAs#
+    missing_or_not_1  <-  sapply(dt_p_0, function(x) sum(is.na(x)))#
+    missing_or_not_1[missing_or_not_1 > 0]#
+    missing_vars  <- names (missing_or_not_1[missing_or_not_1 > 0]) # c('A1','A2', 'A3', 'A4', 'A5', 'A12_1', 'A12_2', 'A12_3' )#
+    # Before:#
+    #   A1, A2, A3, A4, A5   ... all numeric #
+    #   filter_day1_area_conc , filter_day1_personal_conc , filter_day2_area_conc , filter_day2_personal_conc , hr48_conc_a , hr48_conc_p#
+    # After:#
+    #   A12_1, A12_2, A12_3    ... all categorical#
+    #   filter_day1_area_conc , filter_day1_personal_conc , filter_day2_area_conc , filter_day2_personal_conc , hr48_conc_a , hr48_conc_p#
+    # count missing#
+    total_missing_obs_count <- sum(missing_or_not_1[ missing_or_not_1 > 0])#
+    frac_missing  <- total_missing_obs_count/(nrow(dt_p_0) * ncol(dt_p_0))#
+    hh_incomplete <- nrow(dt_p_0[rowSums(is.na(dt_p_0)) > 0,])      #
+### Merge baseline + post-monitoring questionnaire with sample form#
+dt_p_1 <- merge(dt_p_0, entry_formerge, by = c('HHID','before'))#
+saveRDS(dt_p_1,'~/Box Sync/LaosDataAnalysis-Drew/Data/rda/sampleform_pmp_base_merged.Rdata')#
+### Examine missingness of surveys + sample forms#
+    # find all missing values, and count NAs#
+    missing_or_not_2  <-  sapply(dt_p_1, function(x) sum(is.na(x)))#
+    missing_or_not_2[missing_or_not_2 > 0]#
+    missing_vars_2  <- names (missing_or_not_2[missing_or_not_2 > 0]) # c('A1','A2', 'A3', 'A4', 'A5', 'A12_1', 'A12_2', 'A12_3' )#
+    # count missing#
+    total_missing_obs_count_2 <- sum(missing_or_not_2[ missing_or_not_2 > 0])#
+    frac_missing_2  <- ((total_missing_obs_count_2 - 41)/(nrow(dt_p_1) * (ncol(dt_p_1) -4 )))#
+    hh_incomplete_2 <- nrow(dt_p_1[rowSums(is.na(dt_p_1)) > 0,])        #
+##### Imputation of missing Baseline and PMP variabls PRIOR to inclusion of Sample Forms or section I (due to it being considered Personal Identifying Info)#
+    ## Assumes missing at random!#
+#
+# Assign categorical variables as factors where appropriate#
+    categorical_vars <- c(#
+        # from sampleforms#
+        'village','filters_start_wday1','filters_start_wday2','filters_start_month1','filters_start_month2',#
+        # frome baseline questionnaire#
+        'base_A2','base_A4','base_A5','base_A6','base_A7','base_D12A', 'base_D13A',#
+        'base_H4', 'base_H7', 'base_H15', 'base_H16_1','base_H16_2' ,'base_H16_3' ,'base_H16_4' ,'base_H16_5'  ,'base_H16_7'  ,'base_H16_9' ,'base_H16_10' ,#
+            ##
+            ##
+            ##
+            'base_H16_11',#
+            ##
+            ##
+            ##
+        'base_H17_1','base_H17_2' ,'base_H17_3' ,'base_H17_4' ,'base_H17_7' ,'base_H17_9' ,'base_H17_10' ,'base_H17_11', 'base_edu_cook', 'base_edu_highest', 'base_water', 'base_water_consolidated',#
+        # from post-personal questionnaire#
+        'A6_1','A6_2','A7_1','A7_2','A8_1','A8_2','A10_2','A10_3','A11','A12_1','A12_2','A12_3','A13_2','A13_3','B1','B2','B3','B5','C2','C4','C8','D2','D4','F12','F13','kitchen_ventilation','lsis_kitch',#
+        # non-variable#
+        'base_A9', 'base_A11', 'base_D14A', 'base_D15A', 'base_D16A', 'base_H16_6', 'base_H16_8', 'base_H17_5', 'base_H17_6', 'base_H17_8', 'base_lsis_kitch', 'C1', 'C5'#
+        )#
+#
+        # set variables as factors for use with dummies package... should be same as dummy_vars#
+    dt_p_1[,(categorical_vars):=lapply(.SD, as.factor),.SDcols=categorical_vars]#
+#
+# separate outcome from non-outcome variables#
+outcomes <- c('hr48_conc_p','filter_day1_personal_conc','filter_day2_personal_conc')#
+non_outcome_vars <- setdiff(names(dt_p_1) , c(outcomes, 'HHID'))#
+# identify class of missing variables, and split between factor and numeric#
+factor_list = list()#
+num_list = list()#
+for (i in seq(1:ncol(dt_p_1[,missing_vars_2,with=F])) ){#
+    name <- names(dt_p_1[,missing_vars_2,with=F])[i]#
+    class <- class(dt_p_1[,missing_vars_2,with=F][,get(name)])#
+#
+    if (class == "factor") {#
+        n <- length(factor_list) + 1#
+        factor_list[[n]]  <- name#
+    } else {#
+        n <- length(num_list) + 1#
+        num_list[[n]]  <- name#
+    }#
+}#
+    # comile those lists#
+factor_list <- as.character(do.call(rbind, factor_list))#
+num_list <- as.character(do.call(rbind, num_list))#
+    # remove outcome vars#
+factor_list <- setdiff(factor_list, c('hr48_conc_p', 'filter_day1_personal_conc', 'filter_day2_personal_conc'))#
+num_list <- setdiff(num_list, c('hr48_conc_p', 'filter_day1_personal_conc', 'filter_day2_personal_conc'))#
+        # # rpart imputation, one variable at a time#
+        #   # numeric#
+        #   pred_numNA.fxn <- function(i){#
+        #           class_mod <- rpart(get(num_list[i]) ~ . - hr48_conc_p - filter_day1_personal_conc - filter_day2_personal_conc,#
+        #               data = dt_p_1[!is.na( get(num_list[i]))],#
+        #               method = "anova",#
+        #               na.action = na.omit#
+        #               )#
+#
+        #           predlist_numNA <- predict(class_mod, dt_p_1[is.na(get(num_list[i]))])   #
+        #   }#
+#
+        #   predlist_numNA <- llply(seq(1:length(num_list)), .fun = pred_numNA.fxn)#
+#
+        #   # factors --- SUPER slow for some reason#
+        #   pred_factorNA.fxn <- function(i){#
+        #           class_mod <- rpart(get(factor_list[i]) ~ . - hr48_conc_p - filter_day1_personal_conc - filter_day2_personal_conc,#
+        #               data = dt_p_1[!is.na( get(factor_list[i]))],#
+        #               method = "class",#
+        #               na.action = na.omit#
+        #               )#
+#
+        #           predlist_factorNA <- predict(class_mod, dt_p_1[is.na(get(factor_list[i]))]) #
+        #   }#
+        #   predlist_factorNA <- llply(seq(1:length(num_list)), .fun = pred_factorNA.fxn)#
+# KNN imputation of missing vars ... EXCLUDE OUTCOME VARS#
+vars_for_imputation <- setdiff(missing_vars_2, c('hr48_conc_p', 'filter_day1_personal_conc', 'filter_day2_personal_conc'))#
+knn_output <- as.data.table(kNN( data = as.data.frame(dt_p_1[, (non_outcome_vars), with = F]),#
+    variable = vars_for_imputation,#
+    k = 15,#
+    trace = F))#
+    # convert logical "Imputation Performed = True or FALSE" variables to numeric (0/1) for later use with SuperLearner#
+        # define those vars#
+        post_imp_logi_vars <- setdiff(names(knn_output), non_outcome_vars)#
+        # convert those vars#
+        knn_output[,(post_imp_logi_vars):=lapply(.SD, as.numeric),.SDcols=post_imp_logi_vars]#
+    # reattach HHID#
+    knn_output  <- cbind(knn_output, dt_p_1$HHID)#
+    knn_output <-   rename(knn_output, c('V2'='HHID') )#
+        # confirm proper HHID lineup#
+        # cbind(knn_output[, c('HHID','hr48_conc_a')], dt_p_1[,c('HHID','hr48_conc_a')])#
+#
+# merge imputed variables back with the regular dataset#
+    # new and imputated variables#
+    vars_to_merge_from_knn_output <- c(vars_for_imputation,#
+        post_imp_logi_vars,#
+        c('HHID','before') # to allow proper merge#
+        )#
+    # untouched/unimputed variables #
+    vars_to_merge_from_dt_p_1 <- setdiff(names(dt_p_1), vars_for_imputation)#
+    # merge#
+dt_p_2 <- merge(dt_p_1[,vars_to_merge_from_dt_p_1, with = F], #
+    knn_output[,vars_to_merge_from_knn_output,with=F],#
+    by= c('HHID','before'))#
+# # Central imputation#
+# # library(hmisc)#
+# central_output <- centralImputation(dt_p_1[, (non_outcome_vars),with=F])#
+### Merge entry, pmp, base set post-imputation with PIK set#
+dt_p <- merge(dt_p_2, pik_formerge, by = 'HHID')#
+#
+# # examine key pieces of data#
+# dt_pmp[,c('HHID','before','hr48_conc_a','hr48_conc_p')]#
+# summary(pmp)#
+# summary(dt_pmp)#
+# interpolate missing values where appropriate#
+# md.pattern(dt_p)#
+    # HHID A20 (before), A22 (after), B02 (before)#
+    # A12_1 , A12_2, A12_3, B3, B4#
+#
+    # assume data are MCAR (missing completely at random)#
+    # find all missing values, and count NAs#
+    missing_or_not_3  <-  sapply(dt_p, function(x) sum(is.na(x)))#
+    missing_or_not_3[missing_or_not_3 > 0]#
+    missing_vars_3  <- names (missing_or_not_3[missing_or_not_3 > 0]) # personal exposure variables#
+    # count missing#
+    total_missing_obs_count_3 <- sum(missing_or_not_3[ missing_or_not_3 > 0])#
+    frac_missing_3  <- total_missing_obs_count_3/(nrow(dt_p) * ncol(dt_p))#
+    hh_incomplete_3 <- nrow(dt_p[rowSums(is.na(dt_p)) > 0,])
+hh_incomplete_3
+frac_missing_3
+total_missing_obs_count_3
+###### Create cooking exposure scoring#
+## timing variables (daily averages and scores)#
+# Create score on time spent cooking and close to stove#
+    # cooknig - with a focus on that done at home#
+    dt_p[,homecook_exposure_score_morn := homecook_time_total_morn * as.numeric(A6_1) * as.numeric(A6_2) ]#
+    dt_p[,homecook_exposure_score_aft := homecook_time_total_aft * as.numeric(A7_1) * as.numeric(A7_2)]#
+    dt_p[,homecook_exposure_score_eve := homecook_time_total_eve * as.numeric(A8_1) * as.numeric(A8_2)]#
+    dt_p[, cook_exposure_score := homecook_exposure_score_morn + homecook_exposure_score_aft + homecook_exposure_score_eve +    (awaycook_total_time * as.numeric(A12_1) * as.numeric(A12_3)) ]#
+    # grillnig scores#
+    dt_p[,homegrill_exposure_score := as.numeric(A10) * homegrill_total_time * as.numeric(A10_2) * as.numeric(A10_3)]#
+    dt_p[, grill_exposure_score := homegrill_exposure_score + (as.numeric(A13) * homegrill_total_time * as.numeric(A13_2) * as.numeric(A13_3)) ]#
+#
+    # grill events#
+    dt_p[, grill_event_number :=  A10 + A13]#
+#
+    # Drop related variables#
+    dt_p [, c("A6_1", "A6_2", "A7_1", "A7_2", "A8_1", "A8_2","A10_2","A10_3","A12_1","A12_3", "A10","A13") := NULL]
+considered_var <- ncol(dt_p) - ( ncol(entry_formerge) - 3) - 11
+considered_var
+row_numb_postImp <- nrow(dt_p)
+dt_p_complete <- dt_p[complete.cases(dt_p)]
+rows_dropped_for_incomplete_outcomes <- row_numb_postImp - nrow(dt_p_complete)
+rows_dropped_for_incomplete_outcomes
+# count number of legit variables prior to dropping for 1) lack of variation and 2)dummy-i-zation#
+      legit_col_count_postImp <- ncol(dt_p_complete)#
+      legit_col_names_postImp <- names(dt_p_complete)#
+#
+      # drop non-variable columns#
+      dt_p_complete <- as.data.frame(dt_p_complete)#
+      dt_p_complete <- dt_p_complete[sapply(dt_p_complete, function(x) length(unique(x))>1)]#
+      dt_p_complete <- as.data.table(dt_p_complete)#
+      # count number of legit variables prior to 2)dummy-i-zation#
+      legit_col_count_postImp_afterVar_treatment<- ncol(dt_p_complete)#
+      legit_col_names_postImp_afterVar_treatment <- names(dt_p_complete)#
+#
+      # dummy columns with 0 variation#
+      ImpDum_cols_with_zero_variation  <- setdiff(legit_col_names_postImp,legit_col_names_postImp_afterVar_treatment)
+legit_col_count_postImp
+legit_col_names_postImp
+dt_p_complete
+legit_col_count_postImp_afterVar_treatment
+legit_col_names_postImp
+legit_col_count_postImp
+legit_col_count_postImp_afterVar_treatment
+ImpDum_cols_with_zero_variation
+Imp_cols_with_zero_variation  <- setdiff(legit_col_names_postImp,legit_col_names_postImp_afterVar_treatment)
+Imp_cols_with_zero_variation
+# Create dummy variables where necessary AND drop missing variables#
+    dummy_vars <- c(#
+        # from sampleforms#
+        'village','filters_start_wday1','filters_start_wday2','filters_start_month1','filters_start_month2',#
+        # frome baseline questionnaire#
+        'base_A2','base_A4','base_A5','base_A6','base_A7','base_D12A', 'base_D13A',#
+        'base_H4', 'base_H7', 'base_H15', 'base_H16_1','base_H16_2' ,'base_H16_3' ,'base_H16_4' ,'base_H16_5'  ,'base_H16_7' ,'base_H16_10' ,#
+            ##
+            ##
+            ##
+            'base_H16_11',#
+            ##
+            ##
+            ##
+        'base_H17_1','base_H17_2' ,'base_H17_3' ,'base_H17_4' ,'base_H17_7' ,'base_H17_10' ,'base_H17_11', 'base_edu_cook', 'base_edu_highest', 'base_water', 'base_water_consolidated',#
+        # from post-personal questionnaire#
+        'A11','A12_2','A13_2','A13_3','B1','B2','B3','B5','C2','C4','C8','D2','D4','F12','F13','kitchen_ventilation','lsis_kitch'#
+        )
+length(dummy_vars)
+dt_p_complete[,(dummy_vars):=lapply(.SD, as.factor),.SDcols=dummy_vars]#
+#
+    # names of non-dummy vars#
+    noncat_names <- setdiff(names(dt_p_complete), dummy_vars)#
+    # split dataset into 2: Categorical and Non-categorical variables#
+    dt_p_noncat <- dt_p_complete[, noncat_names,with=F]#
+    dt_p_cat <- dt_p_complete[,(dummy_vars), with=F]
+dt_p_cat
+ncol(dt_p_cat)
+names_factors_dtp <- names(Filter(is.factor, dt_p_complete))
+#check
+if (length(dummy_vars) == length(names_factors_dtp)){print("OK on dummy vars")} else {paste("Whoops! Check on dummy vars and factor names, specifically",setdiff(names(categories(dt_p_complete)), dummy_vars),sep= '')}
+# create empty list and first indicator
+K_list_notMinusOne <- list()
+K_description_list <- list()
+n = 0
+for (i in names(dt_p_cat)){#
+        x <- dt_p_cat[,length(levels( get(i) ))]#
+        if (x > 1) { y = x-1} else { y = x}#
+        n = n+1#
+        K_description_list[[n]] <- y#
+        K_list_notMinusOne[[n]] <- x#
+#
+    }
+if (length(dummy_vars)  == length(K_description_list)){print("OK on dummy var number")} else {"Whoops! Check on dummy vars, factor names, and this list"}
+if ( length(setdiff(names(dt_p_cat), dummy_vars)) == 0) {print(" OK on dummy var names")}
+# replace hypens in variable names with periods so that there are no confusions with new dumy variables created
+names(dt_p_noncat) <- gsub(x = names(dt_p_noncat), pattern = "\\_", replacement = ".")
+names(dt_p_cat) <- gsub(x = names(dt_p_cat), pattern = "\\_", replacement = ".")
+# then create dummy variables, using K-1 levels (default is to  use the least frequently occuring value as reference)
+dt_p_cat <- dummy(dt_p_cat, p = unlist(K_description_list), int= TRUE)
+# merege dummy with non-dummy dataframes
+dt_p_new <- cbind(dt_p_noncat,dt_p_cat)
+ncol(dt_p_new)
+dt_p_cat
+ncol(dt_p_cat)
+names_factors_dtp
+K_description_list
+##### Convert HHId into a numeric var #
+    dt_p_new[substr(HHID,1,1) == "A", HHID := as.numeric(substr(HHID,2,3)) + 0 ]#
+    dt_p_new[substr(HHID,1,1) == "B", HHID := as.numeric(substr(HHID,2,3)) + 100 ]#
+    dt_p_new[substr(HHID,1,1) == "C", HHID := as.numeric(substr(HHID,2,3)) + 200 ]
+dt_p_new
+names(dt_p_new)
+considered_var_step1 <- ncol(dt_p) - ( ncol(entry_formerge) - 3) - 11 - 2
+considered_var_step1
+considered_var_step1 <- ncol(dt_p_new) - ( ncol(entry_formerge) - 3) - 11 - 2
+considered_var_step1
+ncol(dt_p_new)
+names(ncol(dt_p_new) )
+names(dt_p_new)
+considered_var_step1 <- ncol(dt_p_new) - ( ncol(entry_formerge) - 3) - 11
+considered_var_step1
+considered_var_step1 <- ncol(dt_p_new) - ( ncol(entry_formerge) - 3) - 11
+entry_formerge
+ncol(dt_p_new) - -22
+ncol(dt_p_new) - 22
+names(dt_p_cat)
+dummy_vars
+names(dt_p_new)
+ncol(dt_p_new) - 10 -22
+ncol(dt_p_new) - ( ncol(entry_formerge) - 3) - 11
+ncol(dt_p_new) - 11 -22
+considered_var_step1 <- ncol(dt_p) - ( ncol(entry_formerge) - 3) - 11
+considered_var_step1
+names(dt_p)
+considered_var_step1 <- ncol(dt_p) - 12 - 3 - 8 - 3
+considered_var_step1
+Imp_cols_with_zero_variation
+dummy_vars
+names(dt_p_cat)
+names(dt_p_new)
+ncol(dt_p_new) - 7 - 3 - 3 - 9
+missing_vars_3
+missing_vars_2
+missing_or_not_1
+missing_or_not_1[missing_or_not_1 > 0]
+missing_or_not_1  <-  sapply(dt_p_0, function(x) sum(is.na(x)))
+missing_or_not_1[missing_or_not_1 > 0]
+missing_or_not_2  <-  sapply(dt_p_1, function(x) sum(is.na(x)))
+missing_or_not_2[missing_or_not_2 > 0]
+summary(dt_p_1$filter_day1_area_conc)
+dt_p_1[, summary(filter_day1_area_conc), by = before]
+dt_p_1[, county(filter_day1_area_conc), by = before]
+dt_p_1[, count(filter_day1_area_conc), by = before]
+dt_p_1[, count(filter_day1_personal_conc), by = before]
+dt_p_1[, count(filter_day2_personal_conc), by = before]
+dt_p_1[, count(hr48.conc.p), by = before]
+dt_p_1[, count(hr48_conc_p), by = before]
+dt_p_1[, count(filter_day1_area_conc), by = before]
+dt_p_1[, count(filter_day2_area_conc), by = before]
+dt_p_1[, count(hr48.conc.a), by = before]
+dt_p_1[, count(hr48_conc_a), by = before]
+missing_or_not_2[missing_or_not_2 > 0]
+dt_p_new_complete
+dt_p_new
+count(dt_p_new[,village_A])
+count(dt_p_new[,village_B])
+60-19-22
+t.test(dt_p_new[before == 1,hr48.conc.p], dt_p_new[before == 0,hr48.conc.p])
+t.test(dt_p_new[before == 1,hr48.conc.p], dt_p_new[before == 0,hr48.conc.p], paired = F)
+t.test(dt_p_new[before == 1,hr48.conc.a], dt_p_new[before == 0,hr48.conc.a], paired = F)
+names(dt_p_new)
+1 + 4 + 3 + 3
+dt_p_new[, mean(hr48.conc.p\), by = before]
+dt_p_new[, mean(hr48.conc.p), by = before]
+dt_p_new[, mean(hr48.conc.a), by = before]
+library(data.table)#
+library(plyr)#
+library(lubridate)
+x <- '~/Dropbox/filter_room_status/old/tty.usbserial-DAXYBUZP.log.2016-2-16'
+if(fileCheck){#
+        raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime, tz=tzone)]#
+    }else{warning(paste("File", x, "does not contain valid data", sep=" "))}
+}
+x <- '~/Dropbox/filter_room_status/old/tty.usbserial-DAXYBUZP.log.2017-02-16'
+raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime, tz=tzone)]#
+    }
+if(fileCheck){#
+        raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime, tz=tzone)]#
+    }
+mediumwell
+ggplot(mediumwell, aes(x = datetime, y = decC_air)) + geom_line()
+library(ggplot2)
+ggplot(mediumwell, aes(x = datetime, y = decC_air)) + geom_line()
+ggplot(mediumwell, aes(x = datetime, y = degC_air)) + geom_line()
+ggplot(mediumwell, aes(x = datetime, y = degC_air)) + geom_point()
+ggplot(mediumwell, aes(x = datetime, y = degC_air)) + geom_line()
+ggplot(mediumwell, aes(x = datetime, y = degC_air)) + geom_point()
+library(data.table)#
+library(plyr)#
+library(lubridate)
+x <- '~/Dropbox/filter_room_status/old/tty.usbserial-DAXYBUZP.log.2017-05-05'
+raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime, tz=tzone)]#
+    }
+raw <- read.delim(x)
+x <- '~/Dropbox/filter_room_status/old/tty.usbserial-DAXYBUZP.log.2017-05-05'
+raw <- read.delim(x)
+x <- '~/Dropbox/filter_room_status/old/tty.usbserial-DAXYBUZP.log.2017-05-05'
+fileCheck <- file.info(x)$size>0
+fileCheck
+x <- '~/Dropbox/filter_room_status/tty.usbserial-DAXYBUZP.log.2017-05-05'
+fileCheck <- file.info(x)$size>0
+fileCheck
+raw <- read.delim(x)
+kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))
+rare <- as.character(raw[kLines,])
+fn <- tempfile()
+write(rare, file=fn)
+mediumwell <- fread(fn)
+unlink(fn)
+if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime, tz=tzone)]#
+    }
+mediumwell
+mediumwell[, mean(degC_sys)]
+ggplot(mediumwell, aes(x= datetime, y = degC_sys) + geom_point()
+ggplot(mediumwell, aes(x= datetime, y = degC_sys)) + geom_point()
+library(ggplot2)
+ggplot(mediumwell, aes(x= datetime, y = degC_sys)) + geom_point()
+mediumwell[ , mean(degC_air)]
+ggplot(mediumwell, aes(x= datetime, y = degC_air)) + geom_point()
+mediumwell[ , mean(degC_air)]
+mediumwell[ , mean(RH_air)]
+mediumwell[ , summary(RH_air)]
+mediumwell[ , summary(degC_air)]
+mediumwell[ , boxplot(degC_air)]
+mediumwell[ , boxplot(RH_Air)]
+mediumwell[ , boxplot(RH_air)]
+ggplot(mediumwell, aes(x= datetime, y = RH_air)) + geom_point()
+ggplot(mediumwell, aes(x= seq(1, length(mediumwell$degC_air)), y = degC_air)) + geom_point()
+ggplot(mediumwell, aes(x= seq(1, length(mediumwell$degC_air)), y = RH_air)) + geom_point()
+ggplot(mediumwell, aes(x= seq(1, length(mediumwell$degC_air)), y = degC_air)) + geom_line()
+ggplot(mediumwell, aes(x= seq(1, length(mediumwell$degC_air)), y = RH_air)) + geom_line()
+ggplot(mediumwell, aes(x= datetime), y = degC_air)) + geom_line()
+ggplot(mediumwell, aes(x= datetime), y = degC_air)) + geom_point()
+ggplot(mediumwell, aes(x= seq(1, length(mediumwell$degC_air)), y = RH_air)) + geom_line()
+ggplot(mediumwell, aes(x= datetime), y = degC_air)) + geom_point()
+ggplot(mediumwell, aes(x= datetime, y = degC_air)) + geom_point()
+mediumwell[,datetime:=ymd_hms(datetime)]
+ggplot(mediumwell, aes(x= datetime, y = degC_air)) + geom_point()
+ggplot(mediumwell, aes(x= datetime, y = RH_air)) + geom_line()
+ggplot(mediumwell, aes(x= datetime, y = degC_air)) + geom_line()
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = EH_air))
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air))
+mediumwell[ datetime > hm('15:00'), summary(degC_air)]
+mediumwell[ datetime > hm('15:00'), summary(RH_air)]
+x <- '~/Dropbox/filter_room_status/tty.usbserial-DAXYBUZP.log.2017-05-04'
+raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime)]#
+    }
+mediumwell[ datetime > hm('15:00'), summary(RH_air)]
+mediumwell[ , summary(RH_air)]
+# boxplot
+mediumwell[ , boxplot(degC_air)]
+mediumwell[ , boxplot(RH_air)]
+# time series plot
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air))
+mediumwell[ datetime > hm('15:00'), summary(degC_air)]
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air))
+x <- '~/Dropbox/filter_room_status/tty.usbserial-DAXYBUZP.log.2017-05-05'
+raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime)]
+mediumwell[ , summary(degC_air)]
+mediumwell[ , summary(RH_air)]
+mediumwell[ datetime > hm('15:00'), summary(degC_air)]
+mediumwell[ datetime > hm('15:00')]
+mediumwell[ datetime > hm('00:15:00')]
+mediumwell[ datetime > hms('00:15:00')]
+mediumwell[ datetime > ymd_hms('2017-05-05 00:15:00')]
+mediumwell[ datetime > ymd_hms('2017-05-05 00:15:00'), mean(deg_Cair)]
+mediumwell[ datetime > ymd_hms('2017-05-05 00:15:00'), mean(degC_air)]
+mediumwell[ datetime > ymd_hms('2017-05-05 00:15:00'), summary(degC_air)]
+mediumwell[ datetime > ymd_hms('2017-05-05 00:15:00'), summary(RH_air)]
+mediumwell[ datetime > ymd_hms('2017-05-05 00:15:00'), sd(RH_air)]
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+x <- '~/Dropbox/filter_room_status/tty.usbserial-DAXYBUZP.log.2017-05-06'
+raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime)]
+mediumwell[ , summary(degC_air)]
+mediumwell[ , summary(RH_air)]
+mediumwell[ , boxplot(degC_air)]
+mediumwell[ , boxplot(RH_air)]
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air))
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air)) + ylab('Deg (C) or RH (%)')
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+x <- '~/Dropbox/filter_room_status/tty.usbserial-DAXYBUZP.log.2017-05-07'
+if(fileCheck){#
+        raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime)]
+mediumwell[ , summary(degC_air)]
+raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime)]#
+#   }else{warning(paste("File", x, "does not contain valid data", sep=" "))}#
+# }
+mediumwell[ , summary(degC_air)]
+mediumwell[ , summary(RH_air)]
+mediumwell[ , boxplot(degC_air)]
+mediumwell[ , boxplot(RH_air)]
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air)) + ylab('Deg (C) or RH (%)')
+sun <- copy(mediumwell)
+x <- '~/Dropbox/filter_room_status/tty.usbserial-DAXYBUZP.log.2017-05-06'
+# read.patsplus<- function(x, tzone="America/Los_Angeles"){#
+#   #confirm file contains data#
+#   fileCheck <- file.info(x)$size>0#
+#   if(fileCheck){#
+        raw <- read.delim(x)#
+        kLines <- as.numeric(sapply(raw, function(x) grep('[0-9/0-9/0-9]{2,} [0-9:]{6,},[0-9.,]{3,}',x)))#
+        rare <- as.character(raw[kLines,])#
+        fn <- tempfile()#
+        write(rare, file=fn)#
+        mediumwell <- fread(fn)#
+        unlink(fn)#
+        if(ncol(mediumwell)==12){#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_thermistor','usb_pwr','fanSetting','filterSetting','ref_sigDel','low20','high320'))}else{#
+            setnames(mediumwell, c('datetime','V_power','degC_sys','degC_air','RH_air','degC_CO','mV_CO','status','ref_sigDel','low20','high320'))              #
+        }#
+        mediumwell[,datetime:=ymd_hms(datetime)]#
+#   }else{warning(paste("File", x, "does not contain valid data", sep=" "))}#
+# }
+mediumwell <- rbind(mediumwell,sun)
+mediumwell[ , summary(degC_air)]
+mediumwell[ , summary(RH_air)]
+mediumwell[ , boxplot(degC_air)]
+mediumwell[ , boxplot(RH_air)]
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air)) + geom_line(aes(x= datetime, y = RH_air)) + ylab('Deg (C) or RH (%)')
+mediumwell[ , summary(RH_air)]
+mediumwell[ , boxplot(RH_air)]
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = degC_air))
+ggplot(mediumwell) + geom_line(aes(x= datetime, y = RH_air))
+sun
+sun[datetime > ymd_hm('2017-05-07 10:00') , mean(RH_air)]
+sun[datetime > ymd_hm('2017-05-07 10:00') , summary(RH_air)]
+sun[datetime > ymd_hm('2017-05-07 10:00') , sd(RH_air)]
+sun[datetime > ymd_hm('2017-05-07 10:00') , mean(RH_air)]
+library(data.table)#
+library(lubridate)#
+library(plyr)#
+library(ggplot2)#
+library(gridExtra)#
+#
+# read in grav_and_temp_correction.R#
+source('~/Box Sync/Nest - dissertation/2017 Calibrations/WoodSmoke Calibration_Feb2017/code/grav_and_temp_correction.R')#
+## Adjsut dt_nest (and load, if necessary)#
+# dt_nest  <- fread('~/Box Sync/Nest - dissertation/2017 Calibrations/WoodSmoke Calibration_Feb2017/data/nests/nestData_TEMPadj.csv' )#
+# dt_nest[,datetime := ymd_hms(datetime)]#
+dt_nest[,device := as.factor(device)]#
+dt_nest[,led := as.factor(led)]#
+#
+# load dusttrak data#
+dt_dust <- fread('~/Box Sync/Nest - dissertation/2017 Calibrations/WoodSmoke Calibration_Feb2017/data/dusttraks/dusttrakData_unadj.csv' )#
+dt_dust[,datetime := ymd_hms(datetime)]#
+dt_dust[,sample_dtX := as.factor(sample_dtX)]#
+dt_dust[,sample_dtY := as.factor(sample_dtY)]
+setwd("/Users/lawsonhill/Box Sync/Nest - dissertation/2017 Calibrations/WoodSmoke Calibration_Feb2017/code")
+mass_dep_dtX <- 0.0006058
+mass_dep_dtY <- 0.0005775
+dt_dust
+unique(dt_dust$sample_dtX)
+unique(dt_dust$sample_dtY)

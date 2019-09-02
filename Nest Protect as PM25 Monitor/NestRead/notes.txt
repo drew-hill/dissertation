@@ -1,0 +1,28 @@
+1) Copy entire directory to RPi using this command:
+scp -r /Users/lawsonhill/Box\ Sync/Nest\ -\ dissertation/NestRead lawson@192.168.29.100:~
+
+
+2) Go to NestRead on the Rpi, and compile using the following code: 
+gcc -pthread -o mcp_read_pigpio mcp_read_pigpio_v04.c -lpigpio -l rt RPi_SHT1x_pigpio.c -lm
+
+
+######################
+Run via shell script at startup
+
+Set RPi to run the shell script automatically at startup by editing 
+/etc/rc.local to:
+# By default this script does nothing.
+
+# run  mcp_read_pigpio program at startup
+/home/lawson/NestRead/NestRead.sh
+
+exit 0
+
+
+The realtime results of this program can be accessed by typing “su root” (changing user to root, which is the “user” under which the program was launched in screen) and then reattaching the screen with screen -r
+
+
+
+######################
+Run manually with high priority using:
+screen sudo nice -n -20 ./mcp_read_pigpio

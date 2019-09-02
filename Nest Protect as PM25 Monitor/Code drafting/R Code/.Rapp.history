@@ -1,0 +1,2894 @@
+dt[,c('ir_low', 'blue_low') : = 0]
+dt[,c('ir_low', 'blue_low') := 0]
+dt
+dt[(ir_lag - ir) > 30, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+dt
+dt[ir_low != 1]
+dt[is.na(ir_low)]
+dt[ir_low < 1]
+plot(dt[ir_low < 1, ir])
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]
+dt
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]
+dt
+dt[,c('ir_low', 'blue_low') := 0]
+dt[(mean(ir_lag1, ir_lag2,ir_lag3) - ir) > 30, ir_low :=1 ]
+dt[,mean(ir_lag1, ir_lag2,ir_lag3)]
+dt[1, mean(ir_lag1, ir_lag2,ir_lag3)]
+dt[4, mean(ir_lag1, ir_lag2,ir_lag3)]
+dt
+count(dt$ir_low)
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ (ir_lag1+ ir_lag2 + ir_lag3)/3 - ir) > 30, ir_low :=1 ]
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ (ir_lag1+ ir_lag2 + ir_lag3)/3 - ir > 30, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+dt
+count(dt$ir_low)
+plot(aes(dt[,ir]))
+ggplot(aes(dt[,ir]))
+ggplot(dt[ir_low < 1], aes(ir))
+ggplot(dt[ir_low < 1], aes(ir)) + geom_point()
+ggplot(y=dt[ir_low < 1], aes(ir)) + geom_point()
+ggplot(dt[ir_low < 1], aes(y = ir)) + geom_point()
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir)) + geom_point()
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra5 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5)/5]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_lag5)) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra3- ir > 30, ir_low :=1 ]#
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_lag6)) + geom_point()
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra3- ir > 30, ir_low :=1 ]#
+dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_lag6)) + geom_point()
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6)) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra3- ir > 30, ir_low :=1 ]#
+dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6)) + geom_point()
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt
+dt[, ir_lag6 := shift(ir,6)]
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra3- ir > 30, ir_low :=1 ]#
+dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra3- ir > 10, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra3- ir > 5, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6- ir > 5, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[ ir_ra6- ir > 2, ir_low :=1 ]
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6- ir > 2, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[ ir_ra6- ir > 0, ir_low :=1 ]
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6- ir > 0, ir_low :=1 ]
+dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6- ir > 0, ir_low :=1 ]#
+dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir < ir_ra6, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt
+dt[ ir < ir_ra6, ir_low :=1 ]
+dt
+count(dt$ir_low)
+dt[ir_low < 1]
+dt[ir_low < 1, count(ir_low)]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6 - ir > 5, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6 - ir > 1, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6 - ir > 0, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6 - ir > 20, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[ ir_ra6 - ir > 15, ir_low :=1 ]
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6 - ir > 15, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[ ir_ra6 - ir > 10, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra6 - ir > 5, ir_low :=1 ]
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]
+ggplot(dt[ir_low < 1], aes(x=datetime, y = ir ) ) + geom_point()
+dt[, c('ir_ra3','ir_ra6') := 0]
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+dt[, c('ir_ra3','ir_ra6') := NA]
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+dt[ ir_ra6 - ir > 2, ir_low :=1 ]
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6 - ir > 2, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6 - ir > 2, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6 - ir > 0, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6 - ir > 0, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra6 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra3 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]
+dt[,c('ir_low', 'blue_low') := 0]
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[r_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra12 ) ) + geom_point()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[r_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra12 ) ) + geom_point()
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+cal_alpha_ir <- 581.026 + (-0.708498 * tempC)
+dt
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt
+dt[, ir_cal := ir - (- 0.708498*tempC) ]
+dt
+summary(dt$ir_cal)
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[r_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir - (- 0.708498*tempC) ]#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[r_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir - (- 0.708498*tempC) ]#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir + (581.026 - 0.708498*tempC) ]#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir - (581.026 - 0.708498*tempC) ]#
+# # dataset where readings averaged by minute#
+# dt1_min <- dt1#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[,avg_mv:=mean(mv, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_pi_tempC:=mean(pi_tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_tempC:=mean(tempC, na.rm=T),by="led,datetime"]#
+# dt1_min[,avg_rh:=mean(rh, na.rm=T),by="led,datetime"]#
+#
+# dt1_min[,c("mv","pi_tempC","tempC","rh"):=NULL, with=F]#
+# dt1_min <- unique(dt1_min)#
+#
+# dt_min <- dcast.data.table(dt1_min, datetime + avg_pi_tempC + avg_tempC + avg_rh ~ led, value.var = c("avg_mv"))#
+#
+# # average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt, aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+dt
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_point()
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_line()
+boop <- dt[ir_ra6 > 0, mean(ir_ra6), by = minute(datetime)]
+boop
+?lubridate
+dt1_min <- dt
+dt1_min[,datetime := round_date(datetime, unit = c("minute"))]
+dt1_min
+dt[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]
+dt
+dt1[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]
+dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]
+dt1_min
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir - (581.026 - 0.708498*tempC) ]#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_line()#
+# average by minute#
+dt1_min <- dt#
+dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]
+dt1_min
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line()
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir - (-0.708498*tempC) ]#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_line()#
+# average by minute#
+dt1_min <- dt#
+dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]#
+#
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line()
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_point()
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='red')
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='red', size = 1)
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='red', size = .1)
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .1)
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .1) + ylim(c(578,590))
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .1) + ylim(c(578,585))
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+dt[, ir := ir - (581.026-0.708498*tempC) ]#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Filter out inappropriately dropped values#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_line()#
+#
+# average by minute#
+dt1_min <- dt#
+dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]#
+#
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .1)
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .2) + theme_bw()
+library(lubridate)#
+library(data.table)#
+library(reshape2)#
+library(plyr)#
+library(ggplot2)#
+library(tools)#
+#
+setwd('~/Dropbox/Aerie/Nest Protect Teardown/Nest Lab Calibration/datafiles')#
+#
+c <- list.files( full.names=T)#
+a <- c[grep("datalog",c)]#
+b <- c[grep("DT",c)]#
+#
+filter_mass <- 0.0001798 # grams#
+#
+#function to import all files from a directory#
+#into the global working space#
+readCSVs <- function(x){#
+    importRaw <- read.csv(x, stringsAsFactors=F, header=F)#
+    importRaw <- as.data.table(importRaw)#
+    colNames <- c('led','datetime','floor','bit','pi_tempC','tempC','rh')#
+    setnames(importRaw, colNames)#
+    importRaw[,datetime:=round_date(ymd_hms(datetime, tz="America/Los_Angeles"),unit=c("second"))]#
+    name <- basename(file_path_sans_ext(x))#
+    importRaw[,device:=strsplit(name, "_")[[1]][3]]#
+    importRaw[,test:=strsplit(name, "_")[[1]][4]]#
+    assign(name, importRaw, envir=.GlobalEnv)#
+}#
+#
+l_ply(a, readCSVs)#
+#
+temp <- ls(pattern='tempcal')#
+pm <- ls(pattern='PMcal')#
+#
+temp <- do.call(rbind, lapply(temp, get))#
+pm <- do.call(rbind, lapply(pm, get))#
+# filter nest gizmo signal for random drops in signal#
+    pm[led=='ir', diffs:=c(NA,abs(diff(bit))), by=device]#
+    pm[diffs > 10, bit:=NA]#
+    temp[led=='ir', diffs:=c(NA,abs(diff(bit))), by=device]#
+    temp[diffs > 10, bit:=NA]#
+# filter for wildly low values (probable malfunction)#
+    pm[led=='ir',lowest_decile := quantile(bit,prob=0.1,na.rm=T), by=device]#
+    pm[led=='blue',lowest_decile := quantile(bit,prob=0.1,na.rm=T), by=device]#
+    pm[bit < 0.75*lowest_decile, bit := NA]#
+    temp[led=='ir',lowest_decile := quantile(bit,prob=0.1,na.rm=T), by=device]#
+    temp[led=='blue',lowest_decile := quantile(bit,prob=0.1,na.rm=T), by=device]#
+    temp[bit < 0.75*lowest_decile, bit := NA]
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+# dt[, ir := ir - (581.026-0.708498*tempC) ]#
+dt[, ir := ir - (578.304 - 0.66725*tempC + 0.03154*rh) ]
+dt
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt  <- copy(dt)#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+# by periods of 1,2,3#
+dt[, ir_lag1 := shift(ir,1)]#
+dt[, ir_lag2 := shift(ir,2)]#
+dt[, ir_lag3 := shift(ir,3)]#
+dt[, ir_lag4 := shift(ir,4)]#
+dt[, ir_lag5 := shift(ir,5)]#
+dt[, ir_lag6 := shift(ir,6)]#
+dt[, ir_lag7 := shift(ir,7)]#
+dt[, ir_lag8 := shift(ir,8)]#
+dt[, ir_lag9 := shift(ir,9)]#
+dt[, ir_lag10 := shift(ir,10)]#
+dt[, ir_lag11 := shift(ir,11)]#
+dt[, ir_lag12 := shift(ir,12)]#
+# every 20 samples for blue#
+dt[, blue_lag := shift(blue, 20)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+############ Weighted Average signal process#
+# low IR flag#
+dt[,c('ir_low', 'blue_low') := 0]#
+dt[ ir_ra12 - ir > 5, ir_low :=1 ]#
+# dt[(blue_lag - blue) > 30, blue_low :=1 ]#
+#
+# new rolling avg#
+dt[, c('ir_ra3','ir_ra6','ir_lag1','ir_lag2','ir_lag3','ir_lag4','ir_lag5','ir_lag6') := NA]#
+#
+# by periods of 1,2,3#
+dt[ir_low < 1, ir_lag1 := shift(ir,1)]#
+dt[ir_low < 1, ir_lag2 := shift(ir,2)]#
+dt[ir_low < 1, ir_lag3 := shift(ir,3)]#
+dt[ir_low < 1, ir_lag4 := shift(ir,4)]#
+dt[ir_low < 1, ir_lag5 := shift(ir,5)]#
+dt[ir_low < 1, ir_lag6 := shift(ir,6)]#
+dt[ir_low < 1, ir_lag7 := shift(ir,7)]#
+dt[ir_low < 1, ir_lag8 := shift(ir,8)]#
+dt[ir_low < 1, ir_lag9 := shift(ir,9)]#
+dt[ir_low < 1, ir_lag10 := shift(ir,10)]#
+dt[ir_low < 1, ir_lag11 := shift(ir,11)]#
+dt[ir_low < 1, ir_lag12 := shift(ir,12)]#
+#
+# rolling avg#
+dt[, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra3 := (ir_lag1+ ir_lag2 + ir_lag3)/3]#
+dt[ir_low < 1, ir_ra6 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6)/6]#
+dt[ir_low < 1, ir_ra12 := (ir_lag1+ ir_lag2 + ir_lag3 + ir_lag4 + ir_lag5 + ir_lag6 + ir_lag7+ ir_lag8 + ir_lag9 + ir_lag10 + ir_lag11 + ir_lag12)/12]#
+#
+ggplot(dt[ir_ra6 > 0], aes(x=datetime, y = ir_ra6 ) ) + geom_line()#
+#
+# average by minute#
+dt1_min <- dt#
+dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]#
+#
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .2) + theme_bw() + ylim(c(0,5))
+ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .2) + theme_bw() + ylim(c(-5,5))
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+    # cal_alpha_ir <- 581.026 + (-0.708498 * tempC)#
+# dt[, ir := ir - (581.026-0.708498*tempC) ]#
+dt[, ir := ir - (578.304 - 0.66725*tempC + 0.03154*rh) ]#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]
+dt_proc
+dt
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+dt[, ir := ir - (- 0.66725*tempC + 0.03154*rh) ]#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))
+dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]
+## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }
+lag_names = names(dt_step1)[grep('lag',names(dt_step1))]
+lag_names
+unlist(lag_names[2:length(lag_names)])
+dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]
+dt_step1[,c('ir_low') := 0]
+dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] /4 , ir_low :=1 ][ir_low < 1]
+ggplot(dt, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]#
+    ## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }#
+        # drop lag columns#
+        lag_names = names(dt_step1)[grep('lag',names(dt_step1))]#
+        dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+#
+    dt_step1[,c('ir_low') := 0]#
+    dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] / 1 , ir_low :=1 ][ir_low < 1]#
+    ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]#
+    ## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }#
+        # drop lag columns#
+        lag_names = names(dt_step1)[grep('lag',names(dt_step1))]#
+        dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+#
+    dt_step1[,c('ir_low') := 0]#
+    dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] / 4 , ir_low :=1 ][ir_low < 1]#
+    ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+dt[, ir := ir - (-0.64954 * tempC + 0.04560*rh) ]#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]#
+    ## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }#
+        # drop lag columns#
+        lag_names = names(dt_step1)[grep('lag',names(dt_step1))]#
+        dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+#
+    dt_step1[,c('ir_low') := 0]#
+    dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] / 4 , ir_low :=1 ][ir_low < 1]#
+    ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+#
+# drop extranneous columns#
+dtf[, c('ir_low','ir_ra6') := NULL]
+ggplot(dt_step1, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))
+############## Create rolling averages in final data table#
+## dtf is new datatable (data tabel final)#
+rolling_ave_sizes = c(3,6,12, 30)#
+#
+## create lag columns#
+max_lag = 30 # 5 minute rolling average#
+#
+for (i in 1:max_lag){#
+    dtf[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+}#
+#
+# # every 20 samples for blue#
+# dt_step1[, blue_lag := shift(blue, 20)]#
+# rolling avg#
+for (i in rolling_ave_sizes){#
+#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_ra',i,sep='') := rowSums(dtf[, ra_colnames , with=FALSE]) / i]#
+}#
+#
+# rolling stdev#
+for (i in rolling_ave_sizes){#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_rs',i,sep='')  := apply(dtf[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+}#
+#
+# drop lag columns#
+lag_names = names(dtf)[grep('lag',names(dtf))]#
+dtf[, unlist(lag_names[2:length(lag_names)]) := NULL]
+dtf
+ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_lag6) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_ra6) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point() + ylim(c(570,580))
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point(size=0.5) + ylim(c(570,580))
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+dt[, ir := ir - (- 577.15918 + -0.64954 * tempC + 0.04560*rh) ]
+setwd("/Users/lawsonhill/Dropbox/Aerie/Nest/Nest Protect Teardown/R Code")
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]#
+    ggplot(dt_step1, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+    ## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }#
+        # drop lag columns#
+        lag_names = names(dt_step1)[grep('lag',names(dt_step1))]#
+        dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+#
+    dt_step1[,c('ir_low') := 0]#
+    dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] / 4 , ir_low :=1 ][ir_low < 1]#
+    ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+#
+# drop extranneous columns#
+dtf[, c('ir_low','ir_ra6') := NULL]#
+############## Create rolling averages in final data table#
+## dtf is new datatable (data tabel final)#
+rolling_ave_sizes = c(3,6,12, 30)#
+#
+## create lag columns#
+max_lag = 30 # 5 minute rolling average#
+#
+for (i in 1:max_lag){#
+    dtf[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+}#
+#
+# # every 20 samples for blue#
+# dt_step1[, blue_lag := shift(blue, 20)]#
+# rolling avg#
+for (i in rolling_ave_sizes){#
+#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_ra',i,sep='') := rowSums(dtf[, ra_colnames , with=FALSE]) / i]#
+}#
+#
+# rolling stdev#
+for (i in rolling_ave_sizes){#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_rs',i,sep='')  := apply(dtf[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+}#
+#
+# drop lag columns#
+lag_names = names(dtf)[grep('lag',names(dtf))]#
+dtf[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point(size=0.5) + ylim(c(570,580))#
+# average by minute#
+# dt1_min <- dt#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]#
+#
+# ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .2) + theme_bw() + ylim(c(-5,5))
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point(size=0.5)
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+dt[, ir := ir - (577.15918 + -0.64954 * tempC + 0.04560*rh) ]
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]#
+    ggplot(dt_step1, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+    ## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }#
+        # drop lag columns#
+        lag_names = names(dt_step1)[grep('lag',names(dt_step1))]#
+        dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+#
+    dt_step1[,c('ir_low') := 0]#
+    dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] / 4 , ir_low :=1 ][ir_low < 1]#
+    ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+#
+# drop extranneous columns#
+dtf[, c('ir_low','ir_ra6') := NULL]#
+############## Create rolling averages in final data table#
+## dtf is new datatable (data tabel final)#
+rolling_ave_sizes = c(3,6,12, 30)#
+#
+## create lag columns#
+max_lag = 30 # 5 minute rolling average#
+#
+for (i in 1:max_lag){#
+    dtf[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+}#
+#
+# # every 20 samples for blue#
+# dt_step1[, blue_lag := shift(blue, 20)]#
+# rolling avg#
+for (i in rolling_ave_sizes){#
+#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_ra',i,sep='') := rowSums(dtf[, ra_colnames , with=FALSE]) / i]#
+}#
+#
+# rolling stdev#
+for (i in rolling_ave_sizes){#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_rs',i,sep='')  := apply(dtf[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+}#
+#
+# drop lag columns#
+lag_names = names(dtf)[grep('lag',names(dtf))]#
+dtf[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point(size=0.5)#
+#
+# average by minute#
+# dt1_min <- dt#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]#
+#
+# ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .2) + theme_bw() + ylim(c(-5,5))
+ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point(size=0.5)
+# a quick script template for reading in the files produced by the nest_read_wfloor.py script#
+# by Drew Hill, UC Berkeley#
+# Dec 2016#
+#
+# bash command to transfer file from RasPi#
+# scp lawson@192.168.29.157:~/nest_datalog.txt ~/Desktop#
+#
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+filename <- "~/Desktop/nest_datalog_data_2016dec12.txt"#
+col.names <- c('led','datetime','floor','mv','pi_tempC','tempC','rh')#
+#
+dt1 <- fread(filename, col.names=col.names)#
+#
+# truncate and update datetime#
+dt1[,datetime := ymd_hms(datetime, tz="America/Los_Angeles")]#
+dt1[, datetime := round_date(datetime, unit = c("second"))]#
+#
+# create separate voltage columns by IR type#
+    # assumes pi_temp is always the same for ir and blue at datetime X#
+    # ignores/drops floor#
+dt <- dcast.data.table(dt1, datetime + pi_tempC + tempC +rh ~ led, value.var = c("mv"))#
+#
+# adjust IR output by temperature, based on lab calibration#
+# device code 'alpha'#
+dt[, ir := ir - (-0.64954 * tempC + 0.04560*rh) ]#
+#
+# cal_alpha_ir <- 577.15918 + (-0.64954 * tempC) + (0.04560*rh)#
+# average tempC and rh will differ between IR and Blue due to the frequency of measurement (Blue LEd is less frequent than IR LED), so replace average temp for Blue measurements with that of IR measurements
+library(data.table)#
+library(plyr)#
+library(lubridate)#
+library(ggplot2)#
+#
+########### assign datatable of interest to 'dt'#
+dt_proc  <- copy(dt)#
+dt_proc <- rename(dt_proc, c('ir'='ir_lag0'))#
+############ Kalman FIltering signal process#
+########### create lagged ir and blue columns#
+############ Weighted Average signal process#
+# low IR flag ... iterative#
+#
+    ## Step 1) raw difference between global mean and point value must be < 1 sd#
+    dt_proc[,c('ir_low') := 0]#
+    dt_step1 <- dt_proc[ dt_proc[, mean(ir_lag0, na.rm=T)] - ir_lag0 >  dt_proc[, sd(ir_lag0, na.rm=T)] , ir_low :=1 ][ ir_low < 1]#
+    ggplot(dt_step1, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+    ## Step 2) Raw difference between 6-point (1 minute) rolling average and current point must be < 1/4 SD; note that this only looks at major decreases in the RA, and not increases#
+#
+        ########### Create Rolling averages#
+        rolling_ave_sizes = c(6)#
+        ## create lag columns#
+        max_lag = 30 # 5 minute rolling average#
+        for (i in 1:max_lag){#
+            dt_step1[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+        }#
+        # rolling avg#
+        for (i in rolling_ave_sizes){#
+#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_ra',i,sep='') := rowSums(dt_step1[, ra_colnames , with=FALSE]) / i]#
+        }#
+        # rolling stdev#
+        for (i in rolling_ave_sizes){#
+            ra_colnames = names(dt_step1)[grep('lag',names(dt_step1))][1:i] #
+            dt_step1[, paste('ir_rs',i,sep='')  := apply(dt_step1[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+        }#
+        # drop lag columns#
+        lag_names = names(dt_step1)[grep('lag',names(dt_step1))]#
+        dt_step1[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+#
+    dt_step1[,c('ir_low') := 0]#
+    dtf  <- dt_step1[ ir_ra6 - ir_lag0 > dt_step1[,sd( ir_lag0, na.rm=T)] / 4 , ir_low :=1 ][ir_low < 1]#
+    ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(545,590))#
+#
+# drop extranneous columns#
+dtf[, c('ir_low','ir_ra6') := NULL]#
+############## Create rolling averages in final data table#
+## dtf is new datatable (data tabel final)#
+rolling_ave_sizes = c(3,6,12, 30)#
+#
+## create lag columns#
+max_lag = 30 # 5 minute rolling average#
+#
+for (i in 1:max_lag){#
+    dtf[, paste('ir_lag',i,sep='') := shift(ir_lag0,i)]#
+}#
+#
+# # every 20 samples for blue#
+# dt_step1[, blue_lag := shift(blue, 20)]#
+# rolling avg#
+for (i in rolling_ave_sizes){#
+#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_ra',i,sep='') := rowSums(dtf[, ra_colnames , with=FALSE]) / i]#
+}#
+#
+# rolling stdev#
+for (i in rolling_ave_sizes){#
+    ra_colnames = names(dtf)[grep('lag',names(dtf))][1:i] #
+    dtf[, paste('ir_rs',i,sep='')  := apply(dtf[, ra_colnames , with=FALSE], 1, sd, na.rm=F)]#
+}#
+#
+# drop lag columns#
+lag_names = names(dtf)[grep('lag',names(dtf))]#
+dtf[, unlist(lag_names[2:length(lag_names)]) := NULL]#
+ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point(size=0.5)#
+#
+# average by minute#
+# dt1_min <- dt#
+# dt1_min[,datetime := round_date(datetime, unit = c("minute"))]#
+# dt1_min[, avg_ir := mean(ir_ra6, na.rm=T), by = datetime]#
+#
+# ggplot(dt1_min[ir_ra6 > 0], aes(x=datetime, y = avg_ir ) ) + geom_line() + geom_point(colour='blue', size = .2) + theme_bw() + ylim(c(-5,5))
+ggplot(dtf, aes(x=datetime, y = ir_lag6) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = it_ra6) ) + geom_point() + ylim(c(545,590))
+dtf
+ggplot(dtf, aes(x=datetime, y = ir_ra6) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point() + ylim(c(545,590))
+ggplot(dtf, aes(x=datetime, y = ir_lag0) ) + geom_point() + ylim(c(570,580))
+ggplot(dtf, aes(x=datetime, y = ir_ra6) ) + geom_point() + ylim(c(570,580))
+ggplot(dtf, aes(x=datetime, y = ir_ra30) ) + geom_point() + ylim(c(570,580))
