@@ -2,7 +2,7 @@ This repository contains a selection of code written and applied during my disse
 
 To date, code have been added for
   - Chapter 4.  Bridging a dumb gap: smart smoke detectors as a tool for consumer and regulatory PM2.5 monitoring
-      - A huge shoutout to Ajay Pillarisetti, Tracy Allen, the Berkeley Center for Green Chemistry, and the National Science Foundation.
+      - A huge shoutout to Ajay Pillarisetti ( @ajaypillarisetti ), Tracy Allen at EME Systems, the Berkeley Center for Green Chemistry, and the National Science Foundation.
 
 A reiteration of the Acknowledgements from my dissertation; I owe a GREAT deal of thanks to the UC Berkeley community:
 
